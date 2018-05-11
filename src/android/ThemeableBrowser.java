@@ -958,6 +958,8 @@ public class ThemeableBrowser extends CordovaPlugin {
                     int navBarId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
                     lp.height = lp.height - resources.getDimensionPixelSize(navBarId);
                 }
+                   
+                lp.gravity = Gravity.BOTTOM;
 
                 dialog.setContentView(main);
                 dialog.show();
