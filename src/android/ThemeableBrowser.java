@@ -933,14 +933,31 @@ public class ThemeableBrowser extends CordovaPlugin {
                     // If not full screen, we add inAppWebView after adding toolbar.
                     main.addView(inAppWebView);
                 }
-
+                   
                 WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
                 lp.copyFrom(dialog.getWindow().getAttributes());
                 lp.width = WindowManager.LayoutParams.MATCH_PARENT;
                 Display display = cordova.getActivity().getWindowManager().getDefaultDisplay();
                 Point size = new Point();
-                display.getSize(size);
-                lp.height = size.y;
+                display.getRealSize(size);
+                int realHeight = 0;
+                try {
+                    String s = display.toString();
+                    s = s.substring(s.indexOf("app") + 3, s.indexOf(",", s.indexOf("app"))).split("x")[1];
+                    s = s.replaceAll("\\s+", "");
+                    realHeight = Integer.parseInt(s);
+                }catch(Exception e){
+                    realHeight = 0;
+                }
+
+                Resources resources = cordova.getActivity().getResources();
+                int statusBarId = resources.getIdentifier("status_bar_height", "dimen", "android");
+                lp.height = size.y - resources.getDimensionPixelSize(statusBarId);
+
+                if (realHeight != size.y){
+                    int navBarId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+                    lp.height = lp.height - resources.getDimensionPixelSize(navBarId);
+                }
 
                 dialog.setContentView(main);
                 dialog.show();
