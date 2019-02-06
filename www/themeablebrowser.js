@@ -82,7 +82,7 @@ ThemeableBrowser.prototype = {
         return this;
     },
 
-    getUrl: function() {
+    getUrl: function(cb) {
         exec(cb, null, 'ThemeableBrowser', 'getUrl', []);
         return this;
     }
