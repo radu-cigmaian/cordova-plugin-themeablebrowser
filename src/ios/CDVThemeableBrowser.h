@@ -1,124 +1,136 @@
-cordova.define("cordova-plugin-themeablebrowser.themeablebrowser", function(require, exports, module) {
 /*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
-*/
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
 
-var exec = require('cordova/exec');
-var channel = require('cordova/channel');
-var modulemapper = require('cordova/modulemapper');
-var urlutil = require('cordova/urlutil');
+ http://www.apache.org/licenses/LICENSE-2.0
 
-function ThemeableBrowser() {
-   this.channels = {};
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ */
+
+#import <Cordova/CDVPlugin.h>
+#import <Cordova/CDVInvokedUrlCommand.h>
+#import <Cordova/CDVScreenOrientationDelegate.h>
+
+#ifdef __CORDOVA_4_0_0
+    #import <Cordova/CDVUIWebViewDelegate.h>
+#else
+    #import <Cordova/CDVWebViewDelegate.h>
+#endif
+
+@interface CDVThemeableBrowserOptions : NSObject {}
+
+@property (nonatomic) BOOL location;
+@property (nonatomic) NSString* closebuttoncaption;
+@property (nonatomic) NSString* toolbarposition;
+@property (nonatomic) BOOL clearcache;
+@property (nonatomic) BOOL clearsessioncache;
+
+@property (nonatomic) NSString* presentationstyle;
+@property (nonatomic) NSString* transitionstyle;
+
+@property (nonatomic) BOOL zoom;
+@property (nonatomic) BOOL mediaplaybackrequiresuseraction;
+@property (nonatomic) BOOL allowinlinemediaplayback;
+@property (nonatomic) BOOL keyboarddisplayrequiresuseraction;
+@property (nonatomic) BOOL suppressesincrementalrendering;
+@property (nonatomic) BOOL hidden;
+@property (nonatomic) BOOL disallowoverscroll;
+
+@property (nonatomic) NSDictionary* statusbar;
+@property (nonatomic) NSDictionary* toolbar;
+@property (nonatomic) NSDictionary* title;
+@property (nonatomic) NSDictionary* backButton;
+@property (nonatomic) NSDictionary* forwardButton;
+@property (nonatomic) NSDictionary* closeButton;
+@property (nonatomic) NSDictionary* menu;
+@property (nonatomic) NSArray* customButtons;
+@property (nonatomic) BOOL backButtonCanClose;
+@property (nonatomic) BOOL disableAnimation;
+@property (nonatomic) BOOL fullscreen;
+
+@end
+
+@class CDVThemeableBrowserViewController;
+
+@interface CDVThemeableBrowser : CDVPlugin {
+    BOOL _injectedIframeBridge;
 }
 
-ThemeableBrowser.prototype = {
-    _eventHandler: function (event) {
-        if (event && (event.type in this.channels)) {
-            this.channels[event.type].fire(event);
-        }
-    },
-    close: function (eventname) {
-        exec(null, null, 'ThemeableBrowser', 'close', []);
-        return this;
-    },
-    show: function (eventname) {
-        exec(null, null, 'ThemeableBrowser', 'show', []);
-        return this;
-    },
-    getUrl: function(cb) {
-        exec(cb, null, 'ThemeableBrowser', 'getUrl', null, []);
-    },
-    reload: function (eventname) {
-        exec(null, null, 'ThemeableBrowser', 'reload', []);
-        return this;
-    },
-    addEventListener: function (eventname,f) {
-        if (!(eventname in this.channels)) {
-            this.channels[eventname] = channel.create(eventname);
-        }
-        this.channels[eventname].subscribe(f);
-        return this;
-    },
-    removeEventListener: function(eventname, f) {
-        if (eventname in this.channels) {
-            this.channels[eventname].unsubscribe(f);
-        }
-        return this;
-    },
+@property (nonatomic, retain) CDVThemeableBrowserViewController* themeableBrowserViewController;
+@property (nonatomic, copy) NSString* callbackId;
+@property (nonatomic, copy) NSRegularExpression *callbackIdPattern;
 
-    executeScript: function(injectDetails, cb) {
-        if (injectDetails.code) {
-            exec(cb, null, 'ThemeableBrowser', 'injectScriptCode', [injectDetails.code, !!cb]);
-        } else if (injectDetails.file) {
-            exec(cb, null, 'ThemeableBrowser', 'injectScriptFile', [injectDetails.file, !!cb]);
-        } else {
-            throw new Error('executeScript requires exactly one of code or file to be specified');
-        }
-        return this;
-    },
+- (CDVThemeableBrowserOptions*)parseOptions:(NSString*)options;
+- (void)open:(CDVInvokedUrlCommand*)command;
+- (void)getUrl:(CDVInvokedUrlCommand*)command;
+- (void)close:(CDVInvokedUrlCommand*)command;
+- (void)injectScriptCode:(CDVInvokedUrlCommand*)command;
+- (void)show:(CDVInvokedUrlCommand*)command;
+- (void)show:(CDVInvokedUrlCommand*)command withAnimation:(BOOL)animated;
+- (void)reload:(CDVInvokedUrlCommand*)command;
 
-    insertCSS: function(injectDetails, cb) {
-        if (injectDetails.code) {
-            exec(cb, null, 'ThemeableBrowser', 'injectStyleCode', [injectDetails.code, !!cb]);
-        } else if (injectDetails.file) {
-            exec(cb, null, 'ThemeableBrowser', 'injectStyleFile', [injectDetails.file, !!cb]);
-        } else {
-            throw new Error('insertCSS requires exactly one of code or file to be specified');
-        }
-        return this;
-    }
-};
+@end
 
-exports.open = function(strUrl, strWindowName, strWindowFeatures, callbacks) {
-    // Don't catch calls that write to existing frames (e.g. named iframes).
-    if (window.frames && window.frames[strWindowName]) {
-        var origOpenFunc = modulemapper.getOriginalSymbol(window, 'open');
-        return origOpenFunc.apply(window, arguments);
-    }
+@interface CDVThemeableBrowserViewController : UIViewController <UIWebViewDelegate, CDVScreenOrientationDelegate, UIActionSheetDelegate>{
+    @private
+    NSString* _userAgent;
+    NSString* _prevUserAgent;
+    NSInteger _userAgentLockToken;
+    UIStatusBarStyle _statusBarStyle;
+    CDVThemeableBrowserOptions *_browserOptions;
+    
+#ifdef __CORDOVA_4_0_0
+    CDVUIWebViewDelegate* _webViewDelegate;
+#else
+    CDVWebViewDelegate* _webViewDelegate;
+#endif
+    
+}
 
-    strUrl = urlutil.makeAbsolute(strUrl);
-    var iab = new ThemeableBrowser();
+@property (nonatomic, strong) IBOutlet UIWebView* webView;
+@property (nonatomic, strong) IBOutlet UIButton* closeButton;
+@property (nonatomic, strong) IBOutlet UILabel* addressLabel;
+@property (nonatomic, strong) IBOutlet UILabel* titleLabel;
+@property (nonatomic, strong) IBOutlet UIButton* backButton;
+@property (nonatomic, strong) IBOutlet UIButton* forwardButton;
+@property (nonatomic, strong) IBOutlet UIButton* menuButton;
+@property (nonatomic, strong) IBOutlet UIActivityIndicatorView* spinner;
+@property (nonatomic, strong) IBOutlet UIView* toolbar;
 
-    callbacks = callbacks || {};
-    for (var callbackName in callbacks) {
-        iab.addEventListener(callbackName, callbacks[callbackName]);
-    }
+@property (nonatomic, strong) NSArray* leftButtons;
+@property (nonatomic, strong) NSArray* rightButtons;
 
-    var cb = function(eventname) {
-       iab._eventHandler(eventname);
-    };
+@property (nonatomic, weak) id <CDVScreenOrientationDelegate> orientationDelegate;
+@property (nonatomic, weak) CDVThemeableBrowser* navigationDelegate;
+@property (nonatomic) NSURL* currentURL;
+@property (nonatomic) CGFloat titleOffset;
 
-    strWindowFeatures = strWindowFeatures && JSON.stringify(strWindowFeatures);
-    // Slightly delay the actual native call to give the user a chance to
-    // register event listeners first, otherwise some warnings or errors may be missed.
-    setTimeout(function() {
-        exec(cb, cb, 'ThemeableBrowser', 'open', [strUrl, strWindowName, strWindowFeatures || '']);
-    }, 0);
-    return iab;
-};
+- (void)close;
+- (void)reload;
+- (void)navigateTo:(NSURL*)url;
+- (void)showLocationBar:(BOOL)show;
+- (void)showToolBar:(BOOL)show : (NSString*) toolbarPosition;
+- (void)setCloseButtonTitle:(NSString*)title;
 
-exports.EVT_ERR = 'ThemeableBrowserError';
-exports.EVT_WRN = 'ThemeableBrowserWarning';
-exports.ERR_CRITICAL = 'critical';
-exports.ERR_LOADFAIL = 'loadfail';
-exports.WRN_UNEXPECTED = 'unexpected';
-exports.WRN_UNDEFINED = 'undefined';
-});
+- (id)initWithUserAgent:(NSString*)userAgent prevUserAgent:(NSString*)prevUserAgent browserOptions: (CDVThemeableBrowserOptions*) browserOptions navigationDelete:(CDVThemeableBrowser*) navigationDelegate statusBarStyle:(UIStatusBarStyle) statusBarStyle;
+
++ (UIColor *)colorFromRGBA:(NSString *)rgba;
+
+@end
+
+@interface CDVThemeableBrowserNavigationController : UINavigationController
+
+@property (nonatomic, weak) id <CDVScreenOrientationDelegate> orientationDelegate;
+
+@end
+
