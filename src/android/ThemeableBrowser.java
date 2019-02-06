@@ -200,7 +200,16 @@ public class ThemeableBrowser extends CordovaPlugin {
             closeDialog();
         }
         else if (action.equals("getUrl")) {
-                    callbackContext.success("{\"result\": \"" + inAppWebView.getUrl()) + "\"}");
+            this.cordova.getActivity().runOnUiThread(new Runnable() {
+                @SuppressLint("NewApi")
+                @Override
+                public void run() {
+                    if (inAppWebView != null) {
+                        String msg = inAppWebView.getUrl();
+                        callbackContext.success("{\"result\": \"" + msg + "\"}");
+                    }
+                }
+             });
         }
         else if (action.equals("injectScriptCode")) {
             String jsWrapper = null;
